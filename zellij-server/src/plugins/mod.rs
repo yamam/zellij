@@ -997,7 +997,13 @@ pub(crate) fn plugin_thread_main(
                         .map(|client_id| wasm_bridge.client_is_connected(&client_id))
                         .unwrap_or(false)
                 });
-                wasm_bridge.pipe_messages(pipe_messages, shutdown_send.clone(), None)?;
+                if pipe_messages.is_empty() {
+                    let _ = bus
+                        .senders
+                        .send_to_server(ServerInstruction::UnblockCliPipeInput(pipe_id));
+                } else {
+                    wasm_bridge.pipe_messages(pipe_messages, shutdown_send.clone(), None)?;
+                }
             },
             PluginInstruction::KeybindPipe {
                 name,
